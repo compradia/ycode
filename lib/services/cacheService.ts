@@ -32,7 +32,6 @@ function chunk<T>(arr: T[], size: number): T[][] {
 export async function invalidatePage(routePath: string): Promise<boolean> {
   try {
     revalidateTag(`route-/${routePath}`, { expire: 0 });
-    revalidatePath(`/${routePath}`, 'page');
     return true;
   } catch (error) {
     console.error('❌ [Cache] Invalidation error:', error);
