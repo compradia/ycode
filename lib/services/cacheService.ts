@@ -361,6 +361,45 @@ export async function getRoutePathsForDeletedCollectionItems(
   return [...new Set(routes)];
 }
 
+/**
+ * Invalidate cache for pages affected by a change to a single CMS collection.
+ *
+ * Used by external integrations that mutate published collection items without
+ * going through the builder's publish flow (v1 REST API, Webflow sync, etc.).
+ *
+ * Covers two kinds of dependents:
+ *   - Pages that render a collection-list/collection-grid block of this collection.
+ *   - The dynamic page bound to this collection (one URL per published item).
+ *
+ * For deletes and slug renames, pass the pre-mutation slug(s) in `removedSlugs`
+ * so we can invalidate the old URL — once the item is soft-deleted or renamed,
+ * `getRoutePathsForPages` no longer enumerates it, and the CDN would keep
+ * serving the deleted/old content as a 200.
+ */
+export async function invalidateForCollectionChange(
+  collectionId: string,
+  options: { removedSlugs?: string[] } = {},
+): Promise<{ invalidatedRoutes: string[] }> {
+  const { findAffectedPages } = await import('@/lib/repositories/pageLayersRepository');
+
+  const affected = await findAffectedPages([], [], [collectionId]);
+  const pageIds = affected.collectionPageIds;
+
+  const liveRoutes = pageIds.length > 0 ? await getRoutePathsForPages(pageIds) : [];
+
+  const removedRoutes = (options.removedSlugs && options.removedSlugs.length > 0)
+    ? await getRoutePathsForDeletedCollectionItems(new Map([[collectionId, options.removedSlugs]]))
+    : [];
+
+  const routes = [...new Set([...liveRoutes, ...removedRoutes])];
+
+  if (routes.length > 0) {
+    await invalidatePages(routes);
+  }
+
+  return { invalidatedRoutes: routes };
+}
+
 export interface SelectiveInvalidationResult {
   strategy: 'selective' | 'full';
   invalidatedRoutes: string[];
