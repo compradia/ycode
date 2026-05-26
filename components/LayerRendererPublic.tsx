@@ -159,7 +159,7 @@ const LayerRendererPublic: React.FC<LayerRendererPublicProps> = ({
 
       const originalLayerId = layer.id.replace(/-fragment$/, '');
       const hasFilter = !!layer._filterConfig;
-      const hasPagination = layer._paginationMeta && isPublished;
+      const hasPagination = !!layer._paginationMeta;
 
       if (hasPagination || hasFilter) {
         let content: React.ReactNode = renderedChildren;

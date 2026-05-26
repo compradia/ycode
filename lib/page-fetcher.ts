@@ -2474,6 +2474,9 @@ export async function resolveCollectionLayers(
               collectionLayer: paginationConfig.mode === 'load_more'
                 ? stripChildren(layer)
                 : undefined,
+              isPublished,
+              sortBy: collectionVariable.sort_by,
+              sortOrder: collectionVariable.sort_order,
             };
           }
 

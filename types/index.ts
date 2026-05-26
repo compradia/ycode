@@ -1316,6 +1316,14 @@ export interface CollectionPaginationMeta {
   // to rebuild proper item wrappers (link/action/attributes) when items are
   // re-rendered client-side.
   collectionLayer?: Omit<Layer, 'children'>;
+  // Whether SSR rendered this collection from published data. The client
+  // must fetch load-more items from the same source so draft previews
+  // don't accidentally append published rows (or vice versa).
+  isPublished?: boolean;
+  // Sort applied by SSR — load-more must mirror it or offset-based
+  // paging will return overlapping (duplicate) items.
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 // Conditional Visibility Types

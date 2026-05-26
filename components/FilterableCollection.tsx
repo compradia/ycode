@@ -151,7 +151,7 @@ export default function FilterableCollection({
     const parent = markerRef.current.parentElement;
     if (!parent) return;
     ssrChildrenRef.current = Array.from(parent.children).filter(
-      el => el !== markerRef.current
+      el => el !== markerRef.current && !(el as HTMLElement).hasAttribute('data-collection-marker')
     );
     if (pendingFirstEvalRef.current) {
       hideSSR();
@@ -767,7 +767,10 @@ export default function FilterableCollection({
   // Zero DOM footprint: invisible marker + direct children
   return (
     <>
-      <span ref={markerRef} style={{ display: 'none' }} />
+      <span
+        ref={markerRef} data-collection-marker=""
+        style={{ display: 'none' }}
+      />
       {children}
     </>
   );
