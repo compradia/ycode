@@ -15,7 +15,7 @@ import {
   upsertTranslations,
 } from '@/lib/repositories/translationRepository';
 import { getPageById } from '@/lib/repositories/pageRepository';
-import { getComponentById } from '@/lib/repositories/componentRepository';
+import { getAllComponents, getComponentById } from '@/lib/repositories/componentRepository';
 import { getFieldsByCollectionId } from '@/lib/repositories/collectionFieldRepository';
 import { getItemsWithValues } from '@/lib/repositories/collectionItemRepository';
 import { getCachedLayers } from '@/lib/mcp/page-layers';
@@ -300,7 +300,10 @@ export function registerLocaleTools(server: McpServer) {
           return { content: [{ type: 'text' as const, text: `Error: Page "${source_id}" not found.` }], isError: true };
         }
         const layers = await getCachedLayers(source_id);
-        items = extractPageTranslatableItems(page, layers);
+        // Pass components so per-instance override rows get rich
+        // "Component › Variable" labels instead of falling back to layer names.
+        const components = await getAllComponents(false).catch(() => []);
+        items = extractPageTranslatableItems(page, layers, undefined, components);
       } else if (source_type === 'component') {
         const component = await getComponentById(source_id);
         if (!component) {

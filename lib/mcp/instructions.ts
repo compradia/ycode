@@ -535,6 +535,7 @@ Multi-language support:
 - **Page slug / SEO:** \`content_key\` = "slug", "seo:title", or "seo:description". source_type "page".
 - **CMS fields:** source_type "cms", source_id = collection ITEM id. content_key = \`"field:key:<fieldKey>"\` (e.g. "field:key:content", "field:key:title"), or \`"field:id:<fieldId>"\` when the field has no key. Use list_collection_items to get item IDs plus each field's key and type. Only \`text\` and \`rich_text\` fields are translatable.
 - **CMS rich_text fields (e.g. a blog post "content" body):** these store Tiptap JSON, not plain text. Use \`set_rich_text_translation\` with content_key \`"field:key:content"\` (content_type is set to "richtext" automatically). Do NOT send plain text via set_translation for rich_text fields — it will not render and will appear empty in the editor.
+- **Component instance overrides:** when a component instance overrides text/image on a specific page, that override is translated PER PAGE (not on the component). content_key = \`"layer:<instanceLayerId>:override:<type>:<variableId>"\` where type is \`text\`, \`rich_text\`, \`image_src\`, or \`image_alt\`; source_type "page", source_id = page ID. These are easy to miss — call \`list_translatable_content({ source_type: "page", source_id })\` to get them with clear "Component › Variable" labels.
 
 Example — translate a blog post body into Russian:
 \`\`\`
