@@ -31,6 +31,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuCheckboxItem,
 } from '@/components/ui/dropdown-menu';
@@ -82,6 +83,18 @@ const SCALAR_FIELD_GROUP: Partial<Record<CollectionFieldType, string>> = {
 
 const getScalarFieldGroup = (type?: CollectionFieldType): string | undefined =>
   type ? SCALAR_FIELD_GROUP[type] : undefined;
+
+/**
+ * Best-effort singularization of a collection name for "Current X" labels
+ * (e.g. "Tags" -> "Tag", "Categories" -> "Category"). Handles the common
+ * English plural endings; leaves anything it doesn't recognize untouched.
+ */
+const singularizeCollectionName = (name: string): string => {
+  if (/ies$/i.test(name)) return name.replace(/ies$/i, 'y');
+  if (/(sses|shes|ches|xes|zes)$/i.test(name)) return name.replace(/es$/i, '');
+  if (/s$/i.test(name) && !/ss$/i.test(name)) return name.replace(/s$/i, '');
+  return name;
+};
 
 /**
  * Reference Items Selector Component
@@ -211,7 +224,10 @@ function ReferenceItemsSelector({
             onCheckedChange={(checked) => currentPageBinding.onChange(checked === true)}
             onSelect={(e) => e.preventDefault()}
           >
-            {currentPageBinding.label}
+            <span className="flex items-center gap-1.5">
+              <Icon name="zap" className="size-2.5 opacity-60" />
+              {currentPageBinding.label}
+            </span>
           </DropdownMenuCheckboxItem>
         )}
         {currentPageItem && (
@@ -222,6 +238,9 @@ function ReferenceItemsSelector({
           >
             Current page item
           </DropdownMenuCheckboxItem>
+        )}
+        {(currentPageBinding || currentPageItem) && items.length > 0 && (
+          <DropdownMenuSeparator />
         )}
         {loading ? (
           <div className="flex items-center justify-center py-4">
@@ -287,6 +306,11 @@ export default function CollectionFiltersSettings({
   const pageCollectionName = useMemo(
     () => collections.find((c) => c.id === pageCollectionId)?.name || 'page',
     [collections, pageCollectionId]
+  );
+  // Singular form for "Current X" labels (e.g. "Tags" page -> "Current Tag").
+  const pageCollectionNameSingular = useMemo(
+    () => singularizeCollectionName(pageCollectionName),
+    [pageCollectionName]
   );
   const pageCollectionFields = useMemo(
     () => (pageCollectionId ? allFields[pageCollectionId] || [] : []),
@@ -819,7 +843,7 @@ export default function CollectionFiltersSettings({
                       value={condition.value || '[]'}
                       onChange={(value) => handleValueChange(group.id, condition.id, value)}
                       currentPageBinding={canBindReferenceToCurrentPage ? {
-                        label: `Current ${pageCollectionName}`,
+                        label: `Current ${pageCollectionNameSingular}`,
                         checked: isCurrentPageMode,
                         onChange: (checked) => patchCondition(group.id, condition.id, {
                           valueMode: checked ? 'current_page' : 'static',
@@ -881,7 +905,7 @@ export default function CollectionFiltersSettings({
                       onValueChange={(v) => patchCondition(group.id, condition.id, { currentPageFieldId: v })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder={`Current ${pageCollectionName} field...`} />
+                        <SelectValue placeholder={`Current ${pageCollectionNameSingular} field...`} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
@@ -1011,7 +1035,7 @@ export default function CollectionFiltersSettings({
                           <Icon name="database" />
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent>Use current {pageCollectionName} field</TooltipContent>
+                      <TooltipContent>Use current {pageCollectionNameSingular} field</TooltipContent>
                     </Tooltip>
                   )}
                 </div>
